@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b2340">
+<title>Gospel Player</title>
+<style>
+:root{--bg:#f3efe6;--ink:#1b2340;--mut:#5d6580;--card:#fffdf8;--line:#ddd6c4;--acc:#c8472b;--bar:#1b2340;--barink:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#141a30;--ink:#f1ecdf;--mut:#9aa3c2;--card:#1d2545;--line:#2e3862;--acc:#ff8a5c;--bar:#0c1022;--barink:#f1ecdf}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,"Times New Roman",serif}
+body{padding:env(safe-area-inset-top) 0 150px}
+header{padding:20px 18px 6px}
+h1{margin:0;font-size:28px;letter-spacing:-.01em}
+header p{margin:4px 0 0;color:var(--mut);font:14px system-ui,sans-serif}
+nav{display:flex;gap:6px;padding:12px 18px;position:sticky;top:0;background:var(--bg);z-index:5}
+nav button{flex:1;padding:11px 2px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;font:600 14px system-ui,sans-serif}
+nav button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{padding:0 18px}
+.row{display:flex;gap:8px;margin-bottom:12px}
+input[type=text],input[type=url],input[type=search]{flex:1;min-width:0;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:16px system-ui,sans-serif}
+.go{padding:0 16px;border:0;border-radius:10px;background:var(--acc);color:#fff;font:600 15px system-ui,sans-serif}
+.item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px;margin-bottom:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;font:inherit}
+.item.on{border-color:var(--acc);box-shadow:inset 4px 0 0 var(--acc)}
+.item b{display:block;font-size:18px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item small{display:block;color:var(--mut);font:13px system-ui,sans-serif;margin-top:2px}
+.item .t{flex:1;min-width:0}
+.item .ic{font-size:18px;color:var(--acc)}
+.dl{flex:none;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px 10px;font:600 13px system-ui,sans-serif}
+.dl.ok{color:var(--acc)}
+.pick{display:block;text-align:center;padding:14px;border:2px dashed var(--acc);border-radius:12px;color:var(--acc);font:600 15px system-ui,sans-serif;margin-bottom:14px}
+.pick input{display:none}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:0 0 12px;scrollbar-width:none}
+.chip{flex:none;padding:8px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;font:600 13px system-ui,sans-serif}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.opt{display:flex;align-items:center;gap:8px;color:var(--mut);font:14px system-ui,sans-serif;margin:0 0 12px}
+.ext{display:flex;gap:8px;margin:0 0 14px}
+.ext a{flex:1;text-align:center;padding:11px 4px;border-radius:10px;background:var(--ink);color:var(--bg);text-decoration:none;font:600 13px system-ui,sans-serif}
+.note{color:var(--mut);font:13px/1.5 system-ui,sans-serif;margin:0 0 12px}
+.sec{margin:6px 0 10px;color:var(--mut);font:600 14px system-ui,sans-serif}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.big{padding:22px 8px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:700 19px Georgia,serif;text-align:center;line-height:1.2}
+.big.rad{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.big.wide{grid-column:1/-1}
+a.big{display:block;text-decoration:none}
+.small{display:flex;gap:8px;margin-bottom:18px}
+.small button{flex:1;padding:11px 6px;border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:10px;font:600 13px system-ui,sans-serif}
+.msg{color:var(--mut);font:14px system-ui,sans-serif;padding:14px 4px;line-height:1.5}
+.back{background:none;border:0;color:var(--acc);font:600 14px system-ui,sans-serif;padding:4px 0 12px}
+#player{position:fixed;left:0;right:0;bottom:0;background:var(--bar);color:var(--barink);padding:10px 16px calc(12px + env(safe-area-inset-bottom));z-index:9;box-shadow:0 -6px 20px rgba(0,0,0,.25)}
+#now{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+#sub{font:12px system-ui,sans-serif;opacity:.7;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#seekrow{display:flex;align-items:center;gap:8px;font:11px system-ui,sans-serif;opacity:.85}
+#seek{flex:1;accent-color:var(--acc)}
+#ctl{display:flex;justify-content:center;align-items:center;gap:22px;margin-top:6px}
+#ctl button{background:none;border:0;color:var(--barink);font-size:26px;width:52px;height:46px}
+#ctl #pp{background:var(--acc);border-radius:50%;width:56px;height:56px;color:#fff;font-size:24px}
+#yt{position:fixed;right:10px;bottom:calc(172px + env(safe-area-inset-bottom));width:min(340px,92vw);background:#000;border-radius:12px;overflow:hidden;z-index:12;box-shadow:0 6px 24px rgba(0,0,0,.45)}
+#yt[hidden]{display:none}
+#yt .bar{display:flex;align-items:center;gap:4px;padding:4px 6px 4px 10px;background:var(--bar);color:var(--barink);font:600 12px system-ui,sans-serif}
+#yt .bar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#yt .bar button,#yt .bar a{background:none;border:0;color:var(--barink);font:600 13px system-ui,sans-serif;padding:8px;text-decoration:none}
+#yt iframe{display:block;width:100%;aspect-ratio:16/9;border:0}
+.yt-item .ic{color:#e02b20}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Gospel Player</h1>
+  <p>Louvores para ouvir com calma.</p>
+</header>
+<nav role="tablist">
+  <button role="tab" data-tab="home" aria-selected="true">Início</button>
+  <button role="tab" data-tab="radio" aria-selected="false">Rádios</button>
+  <button role="tab" data-tab="music" aria-selected="false">Músicas</button>
+  <button role="tab" data-tab="art" aria-selected="false">Artistas</button>
+  <button role="tab" data-tab="off" aria-selected="false">Offline</button>
+</nav>
+<main id="view"></main>
+
+<div id="player">
+  <div id="now">Escolha algo para ouvir</div>
+  <div id="sub">&nbsp;</div>
+  <div id="seekrow"><span id="cur">0:00</span><input id="seek" type="range" min="0" max="100" value="0" step="0.1"><span id="dur">0:00</span></div>
+  <div id="ctl">
+    <button id="prev" aria-label="Anterior">⏮</button>
+    <button id="pp" aria-label="Tocar ou pausar">▶</button>
+    <button id="next" aria-label="Próxima">⏭</button>
+  </div>
+</div>
+<div id="yt" hidden>
+  <div class="bar"><span id="ytt">YouTube</span><a id="yto" href="#" target="_blank" rel="noopener">Abrir no YouTube</a><button id="ytx" aria-label="Fechar vídeo">✕</button></div>
+  <iframe id="ytf" title="YouTube" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+</div>
+<audio id="a" preload="none"></audio>
+
+<script>
+const $ = s => document.querySelector(s);
+/* Playlists do YouTube para a tela inicial. Preencha com seus links, ex.:
+   {nome:'Louvores da mamãe', url:'https://www.youtube.com/playlist?list=SEU_ID'} */
+const PLAYLISTS = [];
+/* Opcional: chave gratuita da YouTube Data API (Google Cloud) para buscar vídeos dentro do app. */
+const YT_API_KEY = '';
+
+/* ---------- YouTube em janela pequena dentro do app ---------- */
+function parseYT(u){
+  try{
+    const x = new URL(u), h = x.hostname.replace(/^www\.|^m\./,'');
+    let video = null, list = x.searchParams.get('list');
+    if(h === 'youtu.be') video = x.pathname.slice(1);
+    else if(/youtube\.com$|youtube-nocookie\.com$/.test(h)){
+      video = x.searchParams.get('v');
+      const m = x.pathname.match(/^\/(?:shorts|embed|live)\/([\w-]{6,})/); if(m && m[1] !== 'videoseries') video = m[1];
+    } else return null;
+    return (video || list) ? {video, list} : null;
+  }catch(e){ return null; }
+}
+function openYT({video, list, title}){
+  try{ audio.pause(); }catch(e){}
+  let src = video ? `https://www.youtube-nocookie.com/embed/${video}?autoplay=1&playsinline=1&rel=0` + (list ? `&list=${list}` : '')
+                  : `https://www.youtube-nocookie.com/embed/videoseries?list=${list}&autoplay=1&playsinline=1&rel=0`;
+  $('#ytf').src = src;
+  $('#ytt').textContent = title || 'YouTube';
+  $('#yto').href = video ? `https://www.youtube.com/watch?v=${video}` + (list ? `&list=${list}` : '') : `https://www.youtube.com/playlist?list=${list}`;
+  $('#yt').hidden = false;
+  $('#now').textContent = title || 'YouTube'; $('#sub').textContent = 'Tocando na janela do YouTube';
+}
+function closeYT(){ $('#ytf').src = 'about:blank'; $('#yt').hidden = true; }
+
+const view = $('#view'), audio = $('#a');
+let queue = [], idx = -1, tab = 'radio';
+const cache = {};
+
+/* ---------- Player ---------- */
+function fmt(t){ if(!isFinite(t)) return '0:00'; const m=Math.floor(t/60), s=Math.floor(t%60); return m+':'+String(s).padStart(2,'0'); }
+function setQueue(list, i){ queue = list; play(i); }
+function play(i){
+  if(i < 0 || i >= queue.length) return;
+  closeYT();
+  idx = i; const t = queue[i];
+  audio.src = t.url;
+  audio.play().catch(()=>{ $('#sub').textContent = 'Não foi possível tocar. Tente outro item.'; });
+  $('#now').textContent = t.title;
+  $('#sub').textContent = t.sub || '';
+  $('#seek').disabled = !!t.live;
+  if('mediaSession' in navigator){
+    navigator.mediaSession.metadata = new MediaMetadata({title:t.title, artist:t.sub||'Gospel Player'});
+  }
+  markOn();
+}
+function markOn(){
+  document.querySelectorAll('.item[data-i]').forEach(el=>el.classList.toggle('on', +el.dataset.i === idx && el.dataset.q === 'cur'));
+}
+$('#ytx').onclick = closeYT;
+$('#pp').onclick = () => audio.paused ? audio.play() : audio.pause();
+$('#next').onclick = () => play(idx+1 < queue.length ? idx+1 : 0);
+$('#prev').onclick = () => { if(audio.currentTime > 4 && !queue[idx]?.live) audio.currentTime = 0; else play(idx-1 >= 0 ? idx-1 : queue.length-1); };
+audio.onplay = () => $('#pp').textContent = '⏸';
+audio.onpause = () => $('#pp').textContent = '▶';
+audio.onended = () => $('#next').click();
+audio.onerror = () => { $('#sub').textContent = 'Erro ao carregar. Passando para a próxima…'; if(queue.length > 1) setTimeout(()=>$('#next').click(), 1200); };
+audio.ontimeupdate = () => {
+  if(queue[idx]?.live){ $('#cur').textContent = 'ao vivo'; $('#dur').textContent=''; return; }
+  $('#cur').textContent = fmt(audio.currentTime); $('#dur').textContent = fmt(audio.duration);
+  if(audio.duration) $('#seek').value = audio.currentTime / audio.duration * 100;
+};
+$('#seek').oninput = e => { if(audio.duration) audio.currentTime = e.target.value/100*audio.duration; };
+if('mediaSession' in navigator){
+  navigator.mediaSession.setActionHandler('play', ()=>audio.play());
+  navigator.mediaSession.setActionHandler('pause', ()=>audio.pause());
+  navigator.mediaSession.setActionHandler('nexttrack', ()=>$('#next').click());
+  navigator.mediaSession.setActionHandler('previoustrack', ()=>$('#prev').click());
+}
+
+/* ---------- Helpers ---------- */
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+async function getJSON(url){ const r = await fetch(url); if(!r.ok) throw new Error(r.status); return r.json(); }
+function listHTML(items, icon){
+  return items.map((t,i)=>`<button class="item" data-i="${i}" data-q="cur"><span class="ic">${icon}</span><span class="t"><b>${esc(t.title)}</b><small>${esc(t.sub||'')}</small></span></button>`).join('');
+}
+function bindList(items){
+  view.querySelectorAll('.item[data-i]').forEach(el => el.onclick = () => setQueue(items, +el.dataset.i));
+  markOn();
+}
+
+/* ---------- Aba: Rádios (Radio Browser, diretório público) ---------- */
+const RB = ['https://de1.api.radio-browser.info','https://nl1.api.radio-browser.info','https://at1.api.radio-browser.info'];
+async function rbFetch(path){
+  let err;
+  for(const h of RB){ try{ return await getJSON(h + path); }catch(e){ err = e; } }
+  throw err;
+}
+function tabRadio(){
+  const chips = ['Todas','Louvor','Adoração','Hinos','Harpa','Sertanejo gospel','Pregação'];
+  view.innerHTML = `<div class="chips">${chips.map((c,i)=>`<button class="chip${i?'':' on'}" data-c="${i?c:''}">${c}</button>`).join('')}</div><div class="row"><input id="q" type="search" placeholder="Buscar rádio brasileira (nome ou estilo)"><button class="go" id="s">Buscar</button></div><div id="out" class="msg">Carregando rádios gospel do Brasil…</div>`;
+  const base = '?hidebroken=true&order=clickcount&reverse=true&limit=40&countrycode=BR';
+  const load = async () => {
+    const q = $('#q').value.trim();
+    const out = $('#out'); out.className='msg'; out.textContent='Carregando…';
+    try{
+      const key = 'rb2:'+q;
+      let st = cache[key];
+      if(!st){
+        const e = encodeURIComponent;
+        const paths = q
+          ? [`${base}&tag=gospel&name=${e(q)}`, `${base}&name=${e(q)}`, `${base}&tag=${e(q)}`]
+          : [`${base}&tag=gospel`, `${base}&name=gospel`, `${base}&name=${e('evangélica')}`, `${base}&name=louvor`, `${base}&tag=christian`];
+        const res = await Promise.allSettled(paths.map(x=>rbFetch('/json/stations/search'+x)));
+        const seen = new Set(); st = [];
+        res.forEach(r=>{ if(r.status==='fulfilled') r.value.forEach(x=>{ if(!seen.has(x.stationuuid)){ seen.add(x.stationuuid); st.push(x); } }); });
+        if(res.every(r=>r.status==='rejected')) throw 0;
+        cache[key] = st;
+      }
+      const items = st.filter(s=>s.url_resolved).map(s=>({title:s.name.trim(), sub:[s.state, s.codec, s.bitrate?s.bitrate+' kbps':''].filter(Boolean).join(' · ')||'Brasil', url:s.url_resolved, live:true}));
+      if(!items.length){ out.textContent='Nenhuma rádio brasileira encontrada com esse termo. Tente "Todas" ou outro estilo.'; return; }
+      out.className=''; out.innerHTML = listHTML(items,'📻'); bindList(items);
+    }catch(e){ out.textContent='Sem conexão com o diretório de rádios. Verifique a internet e tente de novo.'; }
+  };
+  view.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    view.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
+    $('#q').value = c.dataset.c; load();
+  });
+  $('#s').onclick = load; $('#q').onkeydown = e => { if(e.key==='Enter') load(); };
+  load();
+}
+
+/* ---------- Aba: Músicas (Internet Archive, acervo público) ---------- */
+function tabMusic(){
+  const chips = ['Louvores antigos','Harpa Cristã','Hinos evangélicos','Cantor Cristão','Sertanejo gospel','Música evangélica','Corinhos'];
+  view.innerHTML = `<div class="chips">${chips.map(c=>`<button class="chip" data-c="${c}">${c}</button>`).join('')}</div><div class="row"><input id="q" type="search" placeholder="Buscar em português (ex.: louvor, hinos)" value="louvores antigos"><button class="go" id="s">Buscar</button></div><label class="opt"><input type="checkbox" id="pt"> Só itens marcados como português</label><div id="out" class="msg"></div>`;
+  const search = async () => {
+    const q = $('#q').value.trim() || 'louvores evangélicos';
+    const out = $('#out'); out.className='msg'; out.textContent='Buscando…';
+    try{
+      let qs = `(${q}) AND mediatype:audio`;
+      if($('#pt').checked) qs += ' AND (language:por OR language:Portuguese OR language:português)';
+      const url = 'https://archive.org/advancedsearch.php?q=' + encodeURIComponent(qs) + '&fl[]=identifier&fl[]=title&fl[]=creator&sort[]=downloads+desc&rows=40&output=json';
+      const d = await getJSON(url);
+      const docs = d.response.docs;
+      if(!docs.length){ out.textContent='O acervo livre tem pouco conteúdo com esse termo. Tente outro, desmarque "Só português" ou use a aba Rádios e a aba Offline.'; return; }
+      out.className='';
+      out.innerHTML = docs.map((x,i)=>`<button class="item" data-i="${i}"><span class="ic">💿</span><span class="t"><b>${esc(x.title)}</b><small>${esc(Array.isArray(x.creator)?x.creator[0]:x.creator||'Acervo público')}</small></span></button>`).join('');
+      out.querySelectorAll('.item').forEach(el => el.onclick = () => openAlbum(docs[+el.dataset.i], search));
+    }catch(e){ out.textContent='Não foi possível buscar agora. Verifique a internet.'; }
+  };
+  view.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    view.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
+    $('#q').value = c.dataset.c; search();
+  });
+  $('#s').onclick = search; $('#q').onkeydown = e => { if(e.key==='Enter') search(); };
+  $('#pt').onchange = search;
+  search();
+}
+async function openAlbum(doc, back){
+  view.innerHTML = `<button class="back" id="b">← Voltar aos resultados</button><div id="out" class="msg">Abrindo “${esc(doc.title)}”…</div>`;
+  $('#b').onclick = tabMusic;
+  try{
+    const m = await getJSON('https://archive.org/metadata/' + encodeURIComponent(doc.identifier));
+    const files = (m.files||[]).filter(f => /mp3/i.test(f.format||'') || /\.mp3$/i.test(f.name));
+    const items = files.map(f=>({
+      title: f.title || f.name.replace(/\.mp3$/i,''),
+      sub: doc.title,
+      url: `https://archive.org/download/${encodeURIComponent(doc.identifier)}/${f.name.split('/').map(encodeURIComponent).join('/')}`
+    }));
+    const out = $('#out');
+    if(!items.length){ out.textContent='Este item não tem arquivos MP3. Volte e escolha outro.'; return; }
+    out.className='';
+    out.innerHTML = items.map((t,i)=>`<div style="display:flex;gap:6px;align-items:stretch"><button class="item" data-i="${i}" data-q="cur" style="flex:1;min-width:0"><span class="ic">🎵</span><span class="t"><b>${esc(t.title)}</b><small>${esc(t.sub)}</small></span></button><button class="dl" data-d="${i}" aria-label="Baixar para ouvir offline">⬇</button></div>`).join('');
+    bindList(items);
+    out.querySelectorAll('.dl').forEach(b => b.onclick = async () => {
+      const t = items[+b.dataset.d]; b.textContent='…';
+      try{
+        const r = await fetch(t.url); if(!r.ok) throw 0;
+        await dbPut({name:t.title, sub:t.sub, blob:await r.blob()});
+        b.textContent='✓'; b.classList.add('ok');
+      }catch(e){ b.textContent='⬇'; alert('Não foi possível baixar esta faixa aqui. Tente outra ou use a aba Offline para escolher arquivos do celular.'); }
+    });
+  }catch(e){ $('#out').textContent='Falha ao abrir este item. Tente outro.'; }
+}
+
+/* ---------- Aba: Meu link (qualquer MP3 ou stream público) ---------- */
+function tabLink(){
+  const saved = JSON.parse(localStorage.getItem('gp_links') || '[]');
+  view.innerHTML = `<div class="row"><input id="u" type="url" placeholder="Cole o link do MP3, da rádio ou do YouTube"><button class="go" id="s">Tocar</button></div><div id="out"></div>`;
+  const render = () => {
+    const out = $('#out');
+    if(!saved.length){ out.className='msg'; out.textContent='Cole um link que termina em .mp3 (ou o endereço de uma rádio online). Os links tocados ficam salvos aqui.'; return; }
+    out.className=''; out.innerHTML = listHTML(saved,'🔗'); bindList(saved);
+  };
+  $('#s').onclick = () => {
+    const u = $('#u').value.trim(); if(!/^https?:\/\//i.test(u)) return;
+    const y = parseYT(u); if(y){ openYT(y); $('#u').value=''; return; }
+    const name = decodeURIComponent(u.split('/').pop().split('?')[0]) || u;
+    if(!saved.some(x=>x.url===u)){ saved.unshift({title:name, sub:new URL(u).hostname, url:u}); try{ localStorage.setItem('gp_links', JSON.stringify(saved.slice(0,50))); }catch(e){} }
+    render(); setQueue(saved, saved.findIndex(x=>x.url===u)); $('#u').value='';
+  };
+  render();
+}
+
+
+/* ---------- Aba: Artistas (prévias oficiais de 30 s + atalhos para apps legais) ---------- */
+function tabArtists(){
+  const chips = ['Harpa Cristã','Cassiane','J. Neto','Lauriete','Mattos Nascimento','Daniel e Samuel','Adoração'];
+  view.innerHTML = `<div class="chips">${chips.map(c=>`<button class="chip" data-c="${c}">${c}</button>`).join('')}</div><div class="row"><input id="q" type="search" placeholder="Artista ou música (ex.: Cassiane)"><button class="go" id="s">Buscar</button></div><div id="ext"></div><div id="out" class="msg">Digite o nome de um artista ou escolha um atalho.</div>`;
+  const search = async () => {
+    const q = $('#q').value.trim(); if(!q) return;
+    const t = encodeURIComponent(q), out = $('#out');
+    $('#ext').innerHTML = `<p class="note">Aqui você ouve prévias de 30 segundos. Para ouvir completo, toque em YouTube (já vem no celular):</p><div class="ext"><a href="https://www.youtube.com/results?search_query=${t}%20louvores" target="_blank" rel="noopener">YouTube</a><a href="https://open.spotify.com/search/${t}" target="_blank" rel="noopener">Spotify</a><a href="https://music.youtube.com/search?q=${t}" target="_blank" rel="noopener">YouTube Music</a><a href="https://www.deezer.com/search/${t}" target="_blank" rel="noopener">Deezer</a></div>`;
+    out.className='msg'; out.textContent='Buscando…';
+    if(YT_API_KEY){
+      try{
+        const d = await getJSON(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoCategoryId=10&maxResults=25&q=${encodeURIComponent(q+' louvores')}&key=${YT_API_KEY}`);
+        const vids = d.items.filter(v=>v.id&&v.id.videoId);
+        if(vids.length){
+          out.className=''; out.innerHTML = vids.map((v,i)=>`<button class="item yt-item" data-v="${i}"><span class="ic">▶</span><span class="t"><b>${esc(v.snippet.title)}</b><small>${esc(v.snippet.channelTitle)} · YouTube</small></span></button>`).join('');
+          out.querySelectorAll('.item').forEach(b => b.onclick = () => { const v = vids[+b.dataset.v]; openYT({video:v.id.videoId, title:v.snippet.title}); });
+          return;
+        }
+      }catch(e){}
+    }
+    try{
+      const d = await getJSON(`https://itunes.apple.com/search?term=${t}&media=music&entity=song&country=BR&limit=50`);
+      const items = d.results.filter(r=>r.previewUrl).map(r=>({title:r.trackName, sub:`${r.artistName} · ${r.collectionName||''} · prévia 30 s`, url:r.previewUrl}));
+      if(!items.length){ out.textContent='Nenhuma prévia encontrada. Use os botões acima para ouvir no Spotify, YouTube Music ou Deezer.'; return; }
+      out.className=''; out.innerHTML = listHTML(items,'🎤'); bindList(items);
+    }catch(e){ out.textContent='Não foi possível buscar as prévias agora. Use os botões acima para ouvir no seu app de música.'; }
+  };
+  view.querySelectorAll('.chip').forEach(c => c.onclick = () => {
+    view.querySelectorAll('.chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
+    $('#q').value = c.dataset.c; search();
+  });
+  $('#s').onclick = search; $('#q').onkeydown = e => { if(e.key==='Enter') search(); };
+}
+
+/* ---------- Aba: Offline (arquivos no aparelho) ---------- */
+let _db;
+function dbOpen(){ return _db || (_db = new Promise((res,rej)=>{ const r=indexedDB.open('gp',1); r.onupgradeneeded=()=>r.result.createObjectStore('tracks',{keyPath:'id',autoIncrement:true}); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); })); }
+async function dbTx(mode, fn){ const db=await dbOpen(); return new Promise((res,rej)=>{ const tx=db.transaction('tracks',mode); const rq=fn(tx.objectStore('tracks')); tx.oncomplete=()=>res(rq&&rq.result); tx.onerror=()=>rej(tx.error); }); }
+const dbPut = rec => dbTx('readwrite', st=>st.put(rec));
+const dbAll = () => dbTx('readonly', st=>st.getAll());
+const dbDel = id => dbTx('readwrite', st=>st.delete(id));
+async function tabOffline(){
+  view.innerHTML = `<label class="pick">+ Escolher músicas do celular<input id="f" type="file" accept="audio/*,.mp3" multiple></label><div id="out" class="msg">Carregando…</div>`;
+  try{ navigator.storage?.persist?.(); }catch(e){}
+  const render = async () => {
+    const out = $('#out'); let recs = [];
+    try{ recs = await dbAll(); }catch(e){}
+    if(!recs.length){ out.className='msg'; out.textContent='Nenhuma música salva ainda. Escolha arquivos MP3 do celular ou use o botão ⬇ nas faixas da aba Músicas. Depois de salvas, tocam sem internet.'; return; }
+    const items = recs.map(r=>({title:r.name, sub:r.sub||'Salva no aparelho', url:URL.createObjectURL(r.blob), id:r.id}));
+    out.className='';
+    out.innerHTML = items.map((t,i)=>`<div style="display:flex;gap:6px;align-items:stretch"><button class="item" data-i="${i}" data-q="cur" style="flex:1;min-width:0"><span class="ic">📱</span><span class="t"><b>${esc(t.title)}</b><small>${esc(t.sub)}</small></span></button><button class="dl" data-x="${i}" aria-label="Remover">✕</button></div>`).join('');
+    bindList(items);
+    out.querySelectorAll('.dl').forEach(b => b.onclick = async () => { await dbDel(items[+b.dataset.x].id); render(); });
+  };
+  $('#f').onchange = async e => {
+    for(const f of e.target.files){ try{ await dbPut({name:f.name.replace(/\.[^.]+$/,''), sub:'Do celular', blob:f}); }catch(err){} }
+    render();
+  };
+  render();
+}
+
+/* ---------- Início (tela simples com favoritos) ---------- */
+function goArtist(n){ show('art'); $('#q').value=n; $('#s').click(); }
+function goRadio(n){ show('radio'); $('#q').value=n; $('#s').click(); }
+function tabHome(){
+  const artists = ['Harpa Cristã','Cassiane','J. Neto','Lauriete','Mattos Nascimento','Daniel e Samuel'];
+  const radios = [['Louvores antigos','louvor'],['Adoração','adoração'],['Harpa Cristã','harpa'],['Sertanejo gospel','sertanejo']];
+  view.innerHTML = `
+    <div class="sec">Artistas e hinos</div>
+    <div class="grid">${artists.map(a=>`<button class="big" data-a="${a}">${a}</button>`).join('')}
+      <button class="big wide" data-a="Adoração">Adoração</button></div>
+    <div class="sec">Rádios ao vivo</div>
+    <div class="grid">${radios.map(r=>`<button class="big rad" data-r="${r[1]}">${r[0]}</button>`).join('')}</div>
+    ${PLAYLISTS.length ? `<div class="sec">Playlists no YouTube</div><div class="grid">${PLAYLISTS.map((l,i)=>`<button class="big rad" data-y="${i}">${l.nome}</button>`).join('')}</div>` : ''}
+    <div class="sec">Músicas no celular</div>
+    <div class="grid"><button class="big wide" data-t="off">Minhas músicas (sem internet)</button></div>
+    <div class="small"><button data-t="link">Colar um link do YouTube ou MP3</button></div><div id="pre"></div>`;
+  view.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>goArtist(b.dataset.a));
+  view.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>goRadio(b.dataset.r));
+  view.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>show(b.dataset.t));
+  view.querySelectorAll('[data-y]').forEach(b=>b.onclick=()=>{ const l = PLAYLISTS[+b.dataset.y], y = parseYT(l.url); if(y) openYT({...y, title:l.nome}); });
+  loadPre();
+}
+
+/* Lista que já aparece pronta ao abrir o app */
+async function loadPre(){
+  const box = $('#pre'); if(!box) return;
+  const bindIn = (el, items) => el.querySelectorAll('.item').forEach(b => b.onclick = () => setQueue(items, +b.dataset.i));
+  try{
+    let st = cache.pre;
+    if(!st){ st = cache.pre = await rbFetch('/json/stations/search?hidebroken=true&order=clickcount&reverse=true&limit=8&countrycode=BR&tag=gospel'); }
+    const items = st.filter(x=>x.url_resolved).map(x=>({title:x.name.trim(), sub:[x.state,x.codec].filter(Boolean).join(' · ')||'Brasil', url:x.url_resolved, live:true}));
+    if(items.length){ box.innerHTML = '<div class="sec">Rádios para ouvir agora</div>' + items.map((t,i)=>`<button class="item" data-i="${i}"><span class="ic">📻</span><span class="t"><b>${esc(t.title)}</b><small>${esc(t.sub)}</small></span></button>`).join(''); bindIn(box, items); }
+  }catch(e){}
+  try{
+    let docs = cache.preA;
+    if(!docs){
+      const d = await getJSON('https://archive.org/advancedsearch.php?q=' + encodeURIComponent('(louvores antigos OR hinos evangélicos) AND mediatype:audio') + '&fl[]=identifier&fl[]=title&fl[]=creator&sort[]=downloads+desc&rows=6&output=json');
+      docs = cache.preA = d.response.docs;
+    }
+    if(docs.length){
+      const div = document.createElement('div');
+      div.innerHTML = '<div class="sec" style="margin-top:14px">Álbuns do acervo livre</div>' + docs.map((x,i)=>`<button class="item" data-d="${i}"><span class="ic">💿</span><span class="t"><b>${esc(x.title)}</b><small>${esc(Array.isArray(x.creator)?x.creator[0]:x.creator||'Acervo público')}</small></span></button>`).join('');
+      box.appendChild(div);
+      div.querySelectorAll('.item').forEach(b => b.onclick = () => openAlbum(docs[+b.dataset.d]));
+    }
+  }catch(e){}
+}
+
+/* ---------- Abas ---------- */
+function show(t){
+  tab = t;
+  document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-selected', b.dataset.tab===t));
+  ({home:tabHome, radio:tabRadio, music:tabMusic, art:tabArtists, link:tabLink, off:tabOffline})[t]();
+}
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => show(b.dataset.tab));
+show('home');
+</script>
+</body>
+</html>
